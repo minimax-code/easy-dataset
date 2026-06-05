@@ -36,6 +36,11 @@ model Projects {
   ImageDatasets        ImageDatasets[]
   QuestionTemplates    QuestionTemplates[]
   EvalDatasets         EvalDatasets[]
+  RAGEndpoints         RAGEndpoints[]
+  RAGTestSets          RAGTestSets[]
+  RAGEvalRuns          RAGEvalRuns[]
+  RAGAgentTraces       RAGAgentTraces[]
+  FeishuWikiConnections FeishuWikiConnection[]
 }
 
 model UploadFiles {
@@ -50,6 +55,7 @@ model UploadFiles {
   createAt  DateTime  @default(now())
   updateAt  DateTime  @updatedAt
   GaPairs   GaPairs[]
+  feishuDocumentId String?
 }
 
 model Chunks {
@@ -66,6 +72,7 @@ model Chunks {
   updateAt     DateTime       @updatedAt
   Questions    Questions[]
   EvalDatasets EvalDatasets[]
+  RAGTestQuestions RAGTestQuestions[]
 
   @@index([projectId])
 }
@@ -216,6 +223,8 @@ model Task {
   updateAt       DateTime  @updatedAt
 
   @@index([projectId])
+
+  RAGEvalRun RAGEvalRuns[]
 }
 
 model CustomPrompts {
@@ -403,4 +412,207 @@ model EvalResults {
   @@index([projectId])
   @@index([taskId])
   @@index([evalDatasetId])
+}
+
+model RAGEndpoints {
+  id              String   @id @default(nanoid(12))
+  project         Projects @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId       String
+  name            String
+  baseUrl         String
+  endpointType    String                    // "openai-compatible" | "innopaas" | "langchain" | "custom"
+  authConfig      String   @default("{}")  // JSON: { apiKey, botId, customHeaders }
+  requestMapping  String   @default("{}")  // JSON: request body field mapping
+  responseMapping String   @default("{}")  // JSON: response field mapping
+  tokenMapping    String   @default("{}")  // JSON: token endpoint mapping
+  status          Int      @default(0)     // 0=未测试, 1=已连接, 2=连接失败
+  lastTestedAt    DateTime?
+  createAt        DateTime @default(now())
+  updateAt        DateTime @updatedAt
+
+  RAGEvalRuns RAGEvalRuns[]
+
+  @@index([projectId])
+}
+
+model RAGTestSets {
+  id          String   @id @default(nanoid(12))
+  project     Projects @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String
+  name        String
+  description String   @default("")
+  tags        String   @default("") // comma-separated
+  createAt    DateTime @default(now())
+  updateAt    DateTime @updatedAt
+
+  questions RAGTestQuestions[]
+  evalRuns  RAGEvalRuns[]
+
+  @@index([projectId])
+}
+
+model RAGTestQuestions {
+  id              String      @id @default(nanoid())
+  testSet         RAGTestSets @relation(fields: [testSetId], references: [id], onDelete: Cascade)
+  testSetId       String
+  question        String
+  referenceAnswer String      @default("")
+  chunk           Chunks?     @relation(fields: [chunkId], references: [id])
+  chunkId         String?
+  relevantChunkIds String     @default("[]") // JSON array
+  status          Int         @default(0) // 0=draft, 1=approved
+  createAt        DateTime    @default(now())
+  updateAt        DateTime    @updatedAt
+
+  evalResults RAGEvalResults[]
+
+  @@index([testSetId])
+  @@index([chunkId])
+}
+
+model RAGEvalRuns {
+  id              String      @id @default(nanoid(12))
+  project         Projects    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId       String
+  task            Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId          String
+  endpoint        RAGEndpoints @relation(fields: [endpointId], references: [id])
+  endpointId      String
+  testSet         RAGTestSets @relation(fields: [testSetId], references: [id], onDelete: Cascade)
+  testSetId       String
+  judgeModelId    String?
+  evalOptions     String      @default("{}") // JSON: { faithfulness, relevancy, contextQuality, traceEval }
+  aggregateMetrics String     @default("{}") // JSON: aggregate metric results
+  name            String
+  createAt        DateTime    @default(now())
+  updateAt        DateTime    @updatedAt
+
+  results RAGEvalResults[]
+
+  @@index([projectId])
+  @@index([taskId])
+  @@index([endpointId])
+  @@index([testSetId])
+}
+
+model RAGEvalResults {
+  id              String          @id @default(nanoid())
+  evalRun         RAGEvalRuns     @relation(fields: [evalRunId], references: [id], onDelete: Cascade)
+  evalRunId       String
+  testQuestion    RAGTestQuestions @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId      String
+
+  agentAnswer       String  @default("")
+  retrievedChunkIds String  @default("[]") // JSON array
+  retrievedContext  String  @default("")
+  rawResponse       String  @default("{}") // JSON
+  sessionId         String  @default("")
+
+  recallAt1       Float @default(0)
+  recallAt3       Float @default(0)
+  recallAt5       Float @default(0)
+  recallAt10      Float @default(0)
+  mrr             Float @default(0)
+  ndcgAt10        Float @default(0)
+
+  faithfulness              Float  @default(0)
+  relevancy                 Float  @default(0)
+  faithfulnessExplanation   String @default("")
+  relevancyExplanation      String @default("")
+
+  contextPrecision Float @default(0)
+  contextRecall    Float @default(0)
+
+  traceId               String @default("")
+  toolCallCount         Int    @default(0)
+  toolSelectionAccuracy Float  @default(0)
+  reasoningCoherence    Float  @default(0)
+
+  status       Int    @default(0) // 0=pending, 1=completed, 2=failed
+  errorMessage String @default("")
+  duration     Int    @default(0)
+
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+
+  trace RAGAgentTraces?
+
+  @@unique([evalRunId, questionId])
+  @@index([evalRunId])
+  @@index([questionId])
+}
+
+model RAGAgentTraces {
+  id           String        @id @default(nanoid())
+  project      Projects      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId    String
+  evalResult   RAGEvalResults @relation(fields: [evalResultId], references: [id], onDelete: Cascade)
+  evalResultId String @unique
+
+  steps         String @default("[]") // JSON array of trace steps
+  totalSteps    Int    @default(0)
+  totalDuration Int    @default(0)
+  metrics       String @default("{}") // JSON
+
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([evalResultId])
+}
+
+model FeishuWikiConnection {
+  id           String   @id @default(nanoid())
+  project      Projects @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId    String
+  name         String
+  appId        String
+  appSecret    String
+  spaceId      String
+  spaceName    String
+  status       Int      @default(0) // 0=untested, 1=connected, 2=failed
+  lastSyncedAt DateTime?
+  createAt     DateTime @default(now())
+  updateAt     DateTime @updatedAt
+
+  documents FeishuWikiDocument[]
+  syncLogs  FeishuWikiSyncLog[]
+
+  @@index([projectId])
+}
+
+model FeishuWikiDocument {
+  id           String               @id @default(nanoid())
+  connection   FeishuWikiConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  connectionId String
+  nodeToken    String
+  title        String
+  content      String
+  folderPath   String               @default("")
+  objType      String               @default("docx")
+  syncStatus   Int                  @default(0) // 0=pending, 1=synced, 2=failed, 3=stale
+  lastSyncedAt DateTime?
+  createAt     DateTime             @default(now())
+  updateAt     DateTime             @updatedAt
+
+  @@index([connectionId])
+  @@index([connectionId, nodeToken])
+}
+
+model FeishuWikiSyncLog {
+  id           String               @id @default(nanoid())
+  connection   FeishuWikiConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  connectionId String
+  taskId       String?
+  status       Int                  @default(0) // 0=processing, 1=completed, 2=failed, 3=cancelled
+  startedAt    DateTime             @default(now())
+  completedAt  DateTime?
+  totalNodes   Int                  @default(0)
+  syncedNodes  Int                  @default(0)
+  failedNodes  Int                  @default(0)
+  errors       String               @default("[]")
+  createAt     DateTime             @default(now())
+
+  @@index([connectionId])
+  @@index([connectionId, status])
 }

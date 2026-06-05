@@ -11,5 +11,11 @@ export const TASK = {
     PROCESSING: 0,
     COMPLETED: 1,
     FAILED: 2
+  },
+  TYPES: {
+    RAG_EVALUATION: 'rag-evaluation',
+    RAG_TESTSET_GENERATION: 'rag-testset-generation',
+    FEISHU_WIKI_SYNC: 'feishu-wiki-sync',
+    FEISHU_WIKI_PROCESS: 'feishu-wiki-process'
   }
 };
