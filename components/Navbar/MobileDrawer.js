@@ -34,6 +34,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import BugReportOutlinedIcon from '@mui/icons-material/BugReportOutlined';
 import UpdateChecker from '../UpdateChecker';
 import * as styles from './styles';
 
@@ -126,6 +127,18 @@ export default function MobileDrawer({
                 <DescriptionOutlinedIcon fontSize="small" />
               </ListItemIcon>
               <ListItemText primary={t('textSplit.title')} primaryTypographyProps={styles.smallListItemTextStyles} />
+            </ListItemButton>
+            <ListItemButton
+              role="menuitem"
+              sx={styles.getDrawerSubmenuItemStyles(theme)}
+              component={Link}
+              href={`/projects/${currentProject}/feishu-wiki`}
+              onClick={toggleDrawer}
+            >
+              <ListItemIcon sx={styles.smallListItemIconStyles}>
+                <StorageIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary={t('feishuWiki.title', 'Feishu Wiki')} primaryTypographyProps={styles.smallListItemTextStyles} />
             </ListItemButton>
             <ListItemButton
               role="menuitem"
@@ -291,6 +304,18 @@ export default function MobileDrawer({
                 <VisibilityIcon fontSize="small" />
               </ListItemIcon>
               <ListItemText primary={t('blindTest.title')} primaryTypographyProps={styles.smallListItemTextStyles} />
+            </ListItemButton>
+            <ListItemButton
+              role="menuitem"
+              sx={styles.getDrawerSubmenuItemStyles(theme)}
+              component={Link}
+              href={`/projects/${currentProject}/rag-testing`}
+              onClick={toggleDrawer}
+            >
+              <ListItemIcon sx={styles.smallListItemIconStyles}>
+                <BugReportOutlinedIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary={t('ragTesting.title')} primaryTypographyProps={styles.smallListItemTextStyles} />
             </ListItemButton>
           </List>
         </Collapse>

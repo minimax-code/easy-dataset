@@ -10,13 +10,15 @@ import BasicSettings from '@/components/settings/BasicSettings';
 import ModelSettings from '@/components/settings/ModelSettings';
 import TaskSettings from '@/components/settings/TaskSettings';
 import PromptSettings from './components/PromptSettings';
+import RAGAgentSettings from './components/settings/RAGAgentSettings';
 
 // 定义 TAB 枚举
 const TABS = {
   BASIC: 'basic',
   MODEL: 'model',
   TASK: 'task',
-  PROMPTS: 'prompts'
+  PROMPTS: 'prompts',
+  RAG_AGENT: 'rag-agent'
 };
 
 export default function SettingsPage({ params }) {
@@ -110,6 +112,7 @@ export default function SettingsPage({ params }) {
           <Tab value={TABS.MODEL} label={t('settings.modelConfig')} />
           <Tab value={TABS.TASK} label={t('settings.taskConfig')} />
           <Tab value={TABS.PROMPTS} label={t('settings.promptConfig')} />
+          <Tab value={TABS.RAG_AGENT} label={t('ragTesting.settings.tabTitle')} />
         </Tabs>
       </Paper>
 
@@ -120,6 +123,8 @@ export default function SettingsPage({ params }) {
       {activeTab === TABS.TASK && <TaskSettings projectId={projectId} />}
 
       {activeTab === TABS.PROMPTS && <PromptSettings projectId={projectId} />}
+
+      {activeTab === TABS.RAG_AGENT && <RAGAgentSettings projectId={projectId} />}
     </Container>
   );
 }

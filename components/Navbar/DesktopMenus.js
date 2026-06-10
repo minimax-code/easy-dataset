@@ -14,6 +14,7 @@ import StorageIcon from '@mui/icons-material/Storage';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import BugReportOutlinedIcon from '@mui/icons-material/BugReportOutlined';
 import * as styles from './styles';
 
 /**
@@ -73,6 +74,22 @@ export default function DesktopMenus({
             <DescriptionOutlinedIcon fontSize="small" sx={styles.getPrimaryIconColorStyles(theme)} />
           </ListItemIcon>
           <ListItemText primary={t('textSplit.title')} primaryTypographyProps={styles.smallListItemTextStyles} />
+        </MenuItem>
+        <Divider sx={{ my: 0.75, mx: 1.5 }} />
+        <MenuItem
+          component={Link}
+          href={`/projects/${currentProject}/feishu-wiki`}
+          onClick={() => {
+            onNavigateStart?.();
+            handleMenuClose();
+          }}
+          role="menuitem"
+          sx={styles.getMenuItemStyles(theme)}
+        >
+          <ListItemIcon sx={styles.listItemIconStyles}>
+            <StorageIcon fontSize="small" sx={styles.getPrimaryIconColorStyles(theme)} />
+          </ListItemIcon>
+          <ListItemText primary={t('feishuWiki.title', 'Feishu Wiki')} primaryTypographyProps={styles.smallListItemTextStyles} />
         </MenuItem>
         <Divider sx={{ my: 0.75, mx: 1.5 }} />
         <MenuItem
@@ -238,6 +255,21 @@ export default function DesktopMenus({
             <VisibilityIcon fontSize="small" sx={styles.getPrimaryIconColorStyles(theme)} />
           </ListItemIcon>
           <ListItemText primary={t('blindTest.title')} primaryTypographyProps={styles.smallListItemTextStyles} />
+        </MenuItem>
+        <Divider sx={{ my: 0.5, mx: 1 }} />
+        <MenuItem
+          component={Link}
+          href={`/projects/${currentProject}/rag-testing`}
+          onClick={() => {
+            onNavigateStart?.();
+            handleMenuClose();
+          }}
+          sx={styles.getSimpleMenuItemStyles(theme)}
+        >
+          <ListItemIcon sx={styles.smallListItemIconStyles}>
+            <BugReportOutlinedIcon fontSize="small" sx={styles.getPrimaryIconColorStyles(theme)} />
+          </ListItemIcon>
+          <ListItemText primary={t('ragTesting.title')} primaryTypographyProps={styles.smallListItemTextStyles} />
         </MenuItem>
       </Menu>
 
